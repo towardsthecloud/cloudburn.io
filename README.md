@@ -4,27 +4,20 @@
 [![Documentation](https://img.shields.io/badge/Docs-cloudburn.io-brightgreen)](https://cloudburn.io/docs)
 [![Roadmap](https://img.shields.io/badge/Roadmap-View-orange)](https://roadmap.cloudburn.io)
 
-**A GitHub App that automatically posts AWS cost impacts in your pull requests.**
+**See AWS costs in your pull requests before deploying to production.**
 
-When you write Terraform or AWS CDK code, CloudBurn analyzes the infrastructure diff and shows you exactly what it will cost before merging and deploying to production. No more discovering expensive decisions weeks later on your AWS bill when changes require production downtime and cross-team coordination.
+[CloudBurn](https://cloudburn.io) analyzes your Terraform or AWS CDK infrastructure changes and automatically posts cost estimates in pull requests. Catch expensive mistakes during code review instead of discovering them weeks later on your AWS bill.
 
-Some of the included features:
+## What You Get
 
-- **Automatic cost analysis** - CloudBurn comments on every PR with infrastructure changes, showing monthly cost deltas
-- **Real-time AWS pricing** - Accurate costs based on your infrastructure's region using live AWS Pricing API data
-- **Detailed breakdowns** - See old vs. new monthly costs per resource with usage types and pricing details
-- **Cost awareness** - Team learns AWS pricing through daily exposure, preventing expensive mistakes
+- **Automatic cost analysis** on every PR with infrastructure changes
+- **Real-time AWS pricing** based on your infrastructure's region
+- **Resource-by-resource breakdown** showing old vs new monthly costs
+- **Smart filtering** - only shows resources with actual cost impact (VPC, IAM, security groups filtered out)
 
-## How It Works
+## Example Output
 
-1. **You create a PR** with infrastructure changes (Terraform or AWS CDK)
-2. **GitHub Action runs** and posts the infrastructure diff/plan as a comment
-3. **CloudBurn analyzes** the diff and calculates cost estimates using real-time AWS pricing
-4. **Cost analysis appears** in your PR within seconds (see example output below), showing:
-   - Resources being added/modified/deleted
-   - Detailed cost breakdowns showing old vs. new monthly costs with delta calculations
-   - Regional pricing specific to your infrastructure
-   - Only relevant resources (zero-cost resources filtered out)
+Here's what CloudBurn posts in your PR:
 
 <!-- cloudburn-cost-report -->
 
@@ -69,147 +62,61 @@ Overall monthly cost change: +$217.06
 
 ---
 
-## Quick Start
+## Getting Started
 
-### Installation (3 Steps)
-
-**1. Install the Companion GitHub Action**
-
-CloudBurn analyzes the infrastructure diff output to calculate costs. In order to do that you need a GitHub Action that posts your Terraform plan or CDK diff as a PR comment first. We've created and published free companion actions on the GitHub Marketplace that do exactly this.
-
-Choose the action based on your Infrastructure-as-Code tool, then add it to your workflow:
-
-#### For Terraform Projects
-
-Use the [Terraform Plan PR Commenter Action](https://github.com/marketplace/actions/terraform-plan-pr-commenter) - See [full documentation](https://cloudburn.io/docs/terraform-plan-github-action) for details.
-
-Example workflow showing where to add the action:
-
-```yaml
-name: Terraform Plan
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  terraform-plan:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      id-token: write
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::123456789012:role/github-actions
-          aws-region: us-east-1
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '1.5.0'
-
-      - name: Terraform Init
-        run: terraform init
-
-      # Add this action to your workflow ↓
-      - name: Terraform Plan PR Commenter
-        uses: towardsthecloud/terraform-plan-pr-commenter@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-#### For AWS CDK Projects
-
-Use the [AWS CDK Diff PR Commenter Action](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) - See [full documentation](https://cloudburn.io/docs/aws-cdk-diff-github-action) for details.
-
-Example workflow showing where to add the action:
-
-```yaml
-name: CDK Diff
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  cdk-diff:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      id-token: write
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::123456789012:role/github-actions
-          aws-region: us-east-1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      # Add this action to your workflow ↓
-      - name: CDK Diff PR Commenter
-        uses: towardsthecloud/aws-cdk-diff-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-**2. Install the CloudBurn App from the GitHub Marketplace**
+**Step 1: Install CloudBurn**
 
 [![Install CloudBurn](https://img.shields.io/badge/Install-CloudBurn-blue?logo=github)](https://github.com/marketplace/cloudburn-io)
 
-**3. Open a Pull Request**
+Click "Install" and select the repositories where you manage AWS infrastructure.
 
-CloudBurn automatically adds cost analysis within seconds when you create a PR with infrastructure changes.
+**Step 2: Install the GitHub Action**
+
+CloudBurn needs your infrastructure diff/plan output to calculate costs. Install the companion action for your tool:
+
+- **Terraform:** [Terraform Plan PR Commenter](https://github.com/marketplace/actions/terraform-plan-pr-commenter) ([docs](https://cloudburn.io/docs/terraform-plan-github-action))
+- **AWS CDK:** [AWS CDK Diff PR Commenter](https://github.com/marketplace/actions/aws-cdk-diff-pr-commenter) ([docs](https://cloudburn.io/docs/aws-cdk-diff-github-action))
+
+These actions post your `terraform plan` or `cdk diff` output as a PR comment, which CloudBurn then analyzes.
+
+**Step 3: Create a Pull Request**
+
+Open a PR with infrastructure changes and CloudBurn automatically posts cost analysis within seconds.
+
+## How It Works
+
+1. You open a PR with Terraform or CDK changes
+2. GitHub Action posts the infrastructure diff/plan as a comment
+3. CloudBurn detects the diff, analyzes it using real-time AWS pricing
+4. Cost report appears in your PR showing exactly what each change costs
 
 ## Pricing
 
-### Community (Free)
-- Perfect for individual developers and open-source projects
+**Community (Free)**
 - 1 repository
 - Unlimited users
+- Perfect for individual developers and open-source projects
 
-### Pro Plans
-Starting at **$29/month** with 14-day free trial:
-- Pro Starter: 5 private repos
-- Pro Team: 10 private repos (Most Popular)
-- Pro Business: 25 private repos
-- Pro Enterprise: Unlimited repos
+**Pro Plans** (14-day free trial)
+- **Pro Starter**: 5 repos - $29/month
+- **Pro Team**: 10 repos - $49/month (Most Popular)
+- **Pro Business**: 25 repos - $99/month
+- **Pro Enterprise**: Unlimited repos - $199/month
 
 [View Full Pricing](https://github.com/marketplace/cloudburn-io)
 
+## Documentation & Support
 
-## Navigation
-
-### Documentation
+**Documentation:**
 - [Installation Guide](https://cloudburn.io/docs/install)
-- [AWS CDK GitHub Action Docs](https://cloudburn.io/docs/aws-cdk-diff-github-action)
-- [Terraform GitHub Action Docs](https://cloudburn.io/docs/terraform-plan-github-action)
-- [Full Documentation](https://cloudburn.io/docs)
+- [AWS CDK Setup](https://cloudburn.io/docs/aws-cdk-diff-github-action)
+- [Terraform Setup](https://cloudburn.io/docs/terraform-plan-github-action)
 
-### Community & Support
-- [Product Roadmap](https://roadmap.cloudburn.io) - Vote on upcoming features
-- [Blog & Discussions](https://github.com/towardsthecloud/cloudburn.io/discussions/categories/general) - Blog comments powered by [giscus](https://giscus.app)
+**Community:**
+- [Product Roadmap](https://roadmap.cloudburn.io) - Vote on features
+- [Discussions](https://github.com/towardsthecloud/cloudburn.io/discussions/categories/general)
 - [Report Issues](https://github.com/towardsthecloud/cloudburn.io/issues)
 
-### Resources
-- [Website](https://cloudburn.io)
-- [GitHub Marketplace](https://github.com/marketplace/cloudburn-io)
-
-## Support
-
-- **Community Plan**: Community support via GitHub Issues
-- **Pro Plans**: Email support (priority for Team/Business/Enterprise tiers)
+**Support:**
+- Community: GitHub Issues
+- Pro Plans: Email support (priority for Team/Business/Enterprise)
